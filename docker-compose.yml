@@ -1,0 +1,14 @@
+services:
+  sbommaker:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - sbommaker-data:/app/data
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:h2:file:/app/data/sbommaker
+      SPRING_H2_CONSOLE_ENABLED: "true"
+    restart: unless-stopped
+
+volumes:
+  sbommaker-data:
