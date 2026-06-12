@@ -10,7 +10,8 @@
         nav { background: #1a1a2e; color: #eee; padding: .75rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; }
         nav a { color: #aad4f5; text-decoration: none; font-size: .95rem; }
         nav a:hover { color: #fff; }
-        nav .brand { font-weight: 700; font-size: 1.1rem; color: #fff; margin-right: auto; }
+        nav .brand { font-weight: 700; font-size: 1.1rem; color: #fff; margin-right: auto; display: flex; align-items: center; gap: .6rem; }
+        nav .brand img { height: 32px; width: auto; display: block; }
         main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
         h1 { font-size: 1.6rem; margin-bottom: 1.25rem; }
         h2 { font-size: 1.2rem; margin: 1.5rem 0 .75rem; }
@@ -48,7 +49,10 @@
 </head>
 <body>
 <nav>
-    <span class="brand">SBOM Maker</span>
+    <a href="/" class="brand" style="text-decoration:none;">
+        <img th:if="${logoUrl}" th:src="${logoUrl}" alt="Logo"/>
+        <span>SBOM Maker</span>
+    </a>
     <a href="/components">Components</a>
     <a href="/releases">Releases</a>
 </nav>
