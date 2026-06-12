@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: base('Component Detail', ~{::main})}">
+<body><main>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h1 th:text="${component.name}"></h1>
+        <div class="actions">
+            <a th:href="@{/components/{id}/edit(id=${component.id})}" class="btn btn-secondary">Edit</a>
+            <form class="inline" th:action="@{/components/{id}/delete(id=${component.id})}" method="post"
+                  onsubmit="return confirm('Delete this component?')">
+                <button class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <p><strong>Manufacturer:</strong> <span th:text="${component.manufacturer}"></span></p>
+        <p style="margin-top:.5rem;" th:if="${component.sourceUrl}">
+            <strong>Source:</strong>
+            <a th:href="${component.sourceUrl}" target="_blank" th:text="${component.sourceUrl}"></a>
+        </p>
+    </div>
+
+    <h2>Versions</h2>
+
+    <table th:if="${not #lists.isEmpty(component.versions)}">
+        <thead>
+        <tr>
+            <th>Version</th>
+            <th>Notes</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="v : ${component.versions}">
+            <td><span class="tag" th:text="${v.version}"></span></td>
+            <td th:text="${v.notes}"></td>
+            <td>
+                <form class="inline"
+                      th:action="@{/components/{id}/versions/{vid}/delete(id=${component.id},vid=${v.id})}"
+                      method="post" onsubmit="return confirm('Delete this version?')">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(component.versions)}" style="color:#6b7280;margin-bottom:1rem;">No versions yet.</p>
+
+    <h2>Add Version</h2>
+    <div class="card">
+        <form th:action="@{/components/{id}/versions(id=${component.id})}"
+              th:object="${newVersion}" method="post">
+            <label for="version">Version *</label>
+            <input id="version" type="text" th:field="*{version}" placeholder="e.g. 3.14.0"/>
+            <div class="error" th:if="${#fields.hasErrors('version')}" th:errors="*{version}"></div>
+
+            <label for="notes">Notes</label>
+            <input id="notes" type="text" th:field="*{notes}" placeholder="Optional release notes"/>
+
+            <button type="submit" class="btn btn-primary">Add Version</button>
+        </form>
+    </div>
+
+    <a href="/components" class="btn btn-secondary">Back to list</a>
+</main></body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: base('Components', ~{::main})}">
+<body><main>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h1>Software Components</h1>
+        <a href="/components/new" class="btn btn-primary">+ New Component</a>
+    </div>
+    <table th:if="${not #lists.isEmpty(components)}">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Manufacturer</th>
+            <th>Source URL</th>
+            <th>Versions</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${components}">
+            <td><a th:href="@{/components/{id}(id=${c.id})}" th:text="${c.name}"></a></td>
+            <td th:text="${c.manufacturer}"></td>
+            <td>
+                <a th:if="${c.sourceUrl}" th:href="${c.sourceUrl}" target="_blank"
+                   th:text="${c.sourceUrl}" style="font-size:.8rem;word-break:break-all;"></a>
+            </td>
+            <td th:text="${#lists.size(c.versions)}"></td>
+            <td class="actions">
+                <a th:href="@{/components/{id}/edit(id=${c.id})}" class="btn btn-secondary">Edit</a>
+                <form class="inline" th:action="@{/components/{id}/delete(id=${c.id})}" method="post"
+                      onsubmit="return confirm('Delete this component and all its versions?')">
+                    <button class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(components)}" style="color:#6b7280;">No components yet. Add one above.</p>
+</main></body>
+</html>

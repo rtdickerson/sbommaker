@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: base('Release Detail', ~{::main})}">
+<body><main>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h1>
+            <span th:text="${release.name}"></span>
+            <span class="tag" style="font-size:1rem;margin-left:.5rem;" th:text="${release.tag}"></span>
+        </h1>
+        <div class="actions">
+            <a th:href="@{/bom/{id}(id=${release.id})}" class="btn btn-success">Download BOM JSON</a>
+            <a th:href="@{/releases/{id}/edit(id=${release.id})}" class="btn btn-secondary">Edit</a>
+            <form class="inline" th:action="@{/releases/{id}/delete(id=${release.id})}" method="post"
+                  onsubmit="return confirm('Delete this release?')">
+                <button class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <p th:if="${release.description}" th:text="${release.description}"
+       style="color:#555;margin-bottom:1rem;"></p>
+
+    <h2>Components in this Release</h2>
+    <table th:if="${not #lists.isEmpty(release.items)}">
+        <thead>
+        <tr>
+            <th>Component</th>
+            <th>Manufacturer</th>
+            <th>Version</th>
+            <th>Notes</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${release.items}">
+            <td th:text="${item.componentVersion.component.name}"></td>
+            <td th:text="${item.componentVersion.component.manufacturer}"></td>
+            <td><span class="tag" th:text="${item.componentVersion.version}"></span></td>
+            <td th:text="${item.componentVersion.notes}"></td>
+            <td>
+                <form class="inline"
+                      th:action="@{/releases/{id}/items/{iid}/delete(id=${release.id},iid=${item.id})}"
+                      method="post" onsubmit="return confirm('Remove this component from the release?')">
+                    <button class="btn btn-danger">Remove</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p th:if="${#lists.isEmpty(release.items)}" style="color:#6b7280;margin-bottom:1rem;">No components added yet.</p>
+
+    <h2>Add Component Version</h2>
+    <div class="card">
+        <form th:action="@{/releases/{id}/items(id=${release.id})}" method="post">
+            <label for="componentVersionId">Select Component &amp; Version</label>
+            <select id="componentVersionId" name="componentVersionId" required>
+                <option value="">-- choose --</option>
+                <th:block th:each="c : ${allComponents}">
+                    <optgroup th:label="${c.name} + ' (' + ${c.manufacturer} + ')'">
+                        <option th:each="v : ${c.versions}"
+                                th:value="${v.id}"
+                                th:text="${c.name} + ' ' + ${v.version}"></option>
+                    </optgroup>
+                </th:block>
+            </select>
+            <button type="submit" class="btn btn-primary">Add to Release</button>
+        </form>
+    </div>
+
+    <a href="/releases" class="btn btn-secondary">Back to list</a>
+</main></body>
+</html>
