@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="${title} + ' — SBOM Maker'">SBOM Maker</title>
+    <title th:text="${title} + ' — ' + ${appName}">SBOM Maker</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, sans-serif; background: #f4f6f9; color: #222; }
@@ -51,7 +51,7 @@
 <nav>
     <a href="/" class="brand" style="text-decoration:none;">
         <img th:if="${logoUrl}" th:src="${logoUrl}" alt="Logo"/>
-        <span>SBOM Maker</span>
+        <span th:text="${appName}">SBOM Maker</span>
     </a>
     <a href="/components">Components</a>
     <a href="/releases">Releases</a>
