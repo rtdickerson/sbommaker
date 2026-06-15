@@ -2,12 +2,16 @@ services:
   sbommaker:
     build: .
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT:-6565}:${SERVER_PORT:-6565}"
     volumes:
       - sbommaker-data:/app/data
+      - ./ssl:/app/ssl:ro
     environment:
       SPRING_DATASOURCE_URL: jdbc:h2:file:/app/data/sbommaker
       SPRING_H2_CONSOLE_ENABLED: "true"
+      SERVER_PORT: "${SERVER_PORT:-6565}"
+      SERVER_SSL_CERTIFICATE: file:/app/ssl/server.crt
+      SERVER_SSL_CERTIFICATE_PRIVATE_KEY: file:/app/ssl/server.key
     restart: unless-stopped
 
 volumes:

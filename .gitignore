@@ -28,3 +28,6 @@ target/
 
 # H2 database files
 data/
+
+# TLS certificate files
+ssl/
