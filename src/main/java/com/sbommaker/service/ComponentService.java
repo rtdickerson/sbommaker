@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -34,6 +35,29 @@ public class ComponentService {
     public SoftwareComponent save(SoftwareComponent component) {
         return componentRepo.save(component);
     }
+
+    public Optional<SoftwareComponent> findByName(String name) {
+        return componentRepo.findByNameIgnoreCase(name);
+    }
+
+    /** Returns the saved component and true if created, false if updated. */
+    public UpsertResult upsert(String name, String manufacturer, String sourceUrl) {
+        return componentRepo.findByNameIgnoreCase(name)
+                .map(existing -> {
+                    existing.setManufacturer(manufacturer);
+                    existing.setSourceUrl(sourceUrl);
+                    return new UpsertResult(componentRepo.save(existing), false);
+                })
+                .orElseGet(() -> {
+                    SoftwareComponent c = new SoftwareComponent();
+                    c.setName(name);
+                    c.setManufacturer(manufacturer);
+                    c.setSourceUrl(sourceUrl);
+                    return new UpsertResult(componentRepo.save(c), true);
+                });
+    }
+
+    public record UpsertResult(SoftwareComponent component, boolean created) {}
 
     public void delete(Long id) {
         componentRepo.deleteById(id);
