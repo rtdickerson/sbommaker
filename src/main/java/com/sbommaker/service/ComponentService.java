@@ -59,6 +59,25 @@ public class ComponentService {
 
     public record UpsertResult(SoftwareComponent component, boolean created) {}
 
+    public record VersionUpsertResult(ComponentVersion version, boolean created) {}
+
+    public VersionUpsertResult upsertVersion(String componentName, String versionStr, String notes) {
+        SoftwareComponent component = componentRepo.findByNameIgnoreCase(componentName)
+                .orElseThrow(() -> new IllegalArgumentException("Component not found: " + componentName));
+        return versionRepo.findByComponentAndVersionIgnoreCase(component, versionStr)
+                .map(existing -> {
+                    existing.setNotes(notes);
+                    return new VersionUpsertResult(versionRepo.save(existing), false);
+                })
+                .orElseGet(() -> {
+                    ComponentVersion cv = new ComponentVersion();
+                    cv.setComponent(component);
+                    cv.setVersion(versionStr);
+                    cv.setNotes(notes);
+                    return new VersionUpsertResult(versionRepo.save(cv), true);
+                });
+    }
+
     public void delete(Long id) {
         componentRepo.deleteById(id);
     }

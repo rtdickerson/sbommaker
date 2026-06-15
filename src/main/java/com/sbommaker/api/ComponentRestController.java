@@ -33,4 +33,18 @@ public class ComponentRestController {
     public ResponseEntity<ComponentResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ComponentResponse.of(componentService.findById(id), false));
     }
+
+    @PutMapping("/{name}/versions")
+    public ResponseEntity<VersionResponse> upsertVersion(@PathVariable String name,
+                                                         @Valid @RequestBody VersionRequest request) {
+        ComponentService.VersionUpsertResult result =
+                componentService.upsertVersion(name, request.version(), request.notes());
+        VersionResponse body = VersionResponse.of(result.version(), result.created());
+        if (result.created()) {
+            URI location = URI.create("/api/components/" + result.version().getComponent().getId()
+                    + "/versions/" + result.version().getId());
+            return ResponseEntity.created(location).body(body);
+        }
+        return ResponseEntity.ok(body);
+    }
 }
