@@ -292,6 +292,102 @@ curl -sk -H "X-API-Key: $KEY" "$BASE/releases/v1.0.0/bom"
 
 ---
 
+## GitLab CI/CD Integration
+
+The following example publishes a BOM to sbommaker automatically on every tag pipeline. It registers each third-party dependency, creates a release entry from the Git tag, links all component versions to it, and saves the resulting BOM JSON as a pipeline artifact.
+
+### 1. Configure CI/CD variables
+
+In your GitLab project go to **Settings → CI/CD → Variables** and add:
+
+| Variable | Value | Flags |
+|----------|-------|-------|
+| `SBOM_URL` | `https://your-sbommaker-host:6565` | |
+| `SBOM_API_KEY` | _(output of `python3 scripts/genkey.py`)_ | Masked, Protected |
+
+### 2. Add a job to `.gitlab-ci.yml`
+
+```yaml
+publish-bom:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - |
+      set -euo pipefail
+      BASE="${SBOM_URL}/api"
+      AUTH="-H \"X-API-Key: ${SBOM_API_KEY}\""
+      TAG="${CI_COMMIT_TAG}"
+      RELEASE_NAME="${CI_PROJECT_TITLE} ${TAG}"
+
+      api() {
+        curl -sf --insecure -H "X-API-Key: ${SBOM_API_KEY}" \
+             -H "Content-Type: application/json" "$@"
+      }
+
+      echo "==> Registering components..."
+
+      api -X PUT "${BASE}/components" -d '{
+        "name":         "Spring Boot",
+        "manufacturer": "Broadcom",
+        "sourceUrl":    "https://spring.io/projects/spring-boot"
+      }'
+
+      api -X PUT "${BASE}/components/Spring Boot/versions" -d '{
+        "version": "3.3.4",
+        "notes":   "Production dependency"
+      }'
+
+      api -X PUT "${BASE}/components" -d '{
+        "name":         "Log4j",
+        "manufacturer": "Apache Software Foundation",
+        "sourceUrl":    "https://logging.apache.org/log4j"
+      }'
+
+      api -X PUT "${BASE}/components/Log4j/versions" -d '{
+        "version": "2.24.1",
+        "notes":   "Production dependency"
+      }'
+
+      echo "==> Creating release ${TAG}..."
+
+      api -X PUT "${BASE}/releases" \
+        -d "{\"name\": \"${RELEASE_NAME}\", \"tag\": \"${TAG}\", \"description\": \"Built from commit ${CI_COMMIT_SHORT_SHA}\"}"
+
+      echo "==> Linking component versions to release..."
+
+      api -X PUT "${BASE}/releases/${TAG}/components" \
+        -d '{"componentName": "Spring Boot", "version": "3.3.4"}'
+
+      api -X PUT "${BASE}/releases/${TAG}/components" \
+        -d '{"componentName": "Log4j", "version": "2.24.1"}'
+
+      echo "==> Downloading BOM..."
+
+      api "${BASE}/releases/${TAG}/bom" -o "bom-${TAG}.json"
+      echo "BOM saved to bom-${TAG}.json"
+
+  artifacts:
+    name: "bom-${CI_COMMIT_TAG}"
+    paths:
+      - "bom-*.json"
+    expire_in: 90 days
+
+  rules:
+    - if: $CI_COMMIT_TAG
+```
+
+### Notes
+
+- **`--insecure`** (`-k`) is used above because sbommaker uses a self-signed certificate by default. Remove it when using a CA-signed certificate.
+- The job runs only on tag pipelines (`rules: - if: $CI_COMMIT_TAG`). Remove that rule to run on every push.
+- Extend the `script` block with additional `api -X PUT …` calls for each component your project depends on.
+- The BOM artifact is retained for 90 days and downloadable from the GitLab pipeline UI.
+- If your sbommaker instance is on an internal host not reachable from GitLab SaaS runners, use a self-hosted runner with network access to it.
+
+---
+
 ## Web UI
 
 The web UI is available without authentication at `https://localhost:6565`.
